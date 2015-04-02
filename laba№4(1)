@@ -1,0 +1,162 @@
+#include <mpi.h>
+#include <iostream>
+using namespace std;
+// Кількість створюваних процесів - 16
+int main(int argc, char **argv)
+{
+	
+	int rank;
+	int tag=0;
+	int s=50;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Request request;
+	MPI_Status status;
+	
+	if (rank == 0)
+	{
+	if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 2, MPI_INT,1,tag, MPI_COMM_WORLD, &request); 
+		MPI_Wait(&request,&status);
+	}
+	
+	if (rank == 1)
+	{ 
+		MPI_Irecv(&s, 2, MPI_INT, 0, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank %2 !=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 2, MPI_INT,2,tag, MPI_COMM_WORLD, &request);
+	} 
+	
+	if (rank == 2)
+	{
+		MPI_Irecv(&s, 2, MPI_INT, 1, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+	if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 2, MPI_INT,3,tag, MPI_COMM_WORLD, &request);
+	}
+	
+
+	if (rank == 3)
+	{	
+		MPI_Irecv(&s, 2, MPI_INT, 2, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+	if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,4,tag, MPI_COMM_WORLD,&request);
+}
+	
+	if (rank == 4)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 3, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+	if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,5,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 5)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 4, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+	if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,6,tag, MPI_COMM_WORLD,&request);
+		
+	}
+
+	if (rank == 6)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 5, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,7,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 7)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 6, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,8,tag, MPI_COMM_WORLD,&request);
+		
+	}
+	
+	if (rank == 8)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 7, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,9,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 9)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 8, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,10,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 10)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 9, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,11,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 11)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 10, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,12,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 12)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 11, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,13,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 13)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 12, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,14,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 14)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 13, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+		s--;
+		MPI_Isend(&s, 1, MPI_INT,15,tag, MPI_COMM_WORLD,&request);
+	}
+	
+	if (rank == 15)
+	{
+		MPI_Irecv(&s, 1, MPI_INT, 14, tag, MPI_COMM_WORLD, &request);
+		MPI_Wait(&request,&status);
+		if(rank%2!=0){cout<<"Process: "<<rank<<": "<<s<<endl;}
+	}
+	
+	MPI_Finalize();
+	return 0; 
+	}
