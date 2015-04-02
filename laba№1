@@ -1,0 +1,87 @@
+1. Знайти мінімальний і максимальний елементи масиву A на 100 елементів цілого типу і поміняти їх місцями. 
+2. Записати на місця від’ємних елементів цілочисельної матриці A розмірністю 5х6 нулі.
+#include <mpi.h>
+#include <iostream>
+#include<time.h>
+#include <cstdlib>
+#include<stdio.h>
+
+using namespace std;
+
+void main(int argc, char **argv)
+{
+  int a[5][6];
+  int b[10];
+  int i,j,id,max, min,x,y;
+  srand(time(NULL));
+
+  MPI_Init(&argc,&argv);
+  MPI_Comm_rank(MPI_COMM_WORLD,&id);
+  // заповнення масиву випадковими числами 
+	for(i=0;i<5;i++) 
+	{
+		for(j=0;j<6;j++) {	a[i][j]=rand()%50-10;	}
+	}
+
+  for(i=0;i<10;i++) {b[i]=rand()%100;}
+
+  if(id==2)
+  {
+    cout<<"procces: "<<id<<endl;
+
+    // виведення масиву на екран
+	for(i=0;i<5;i++) 
+	{
+		for(j=0;j<6;j++) {	cout<<a[i][j]<<"	";	}
+		cout<<endl;
+	}
+
+	//знаходження від'ємних чисел і заміна їх на 0
+	for(i=0;i<5;i++) 
+	{
+		for(j=0;j<6;j++) {	if (a[i][j]<0) a[i][j]=0;	}
+	}
+	cout<<endl;
+
+	// виведення масиву на екран
+		for(i=0;i<5;i++) 
+	{
+		for(j=0;j<6;j++) {	cout<<a[i][j]<<"	";	}
+		cout<<endl;
+	}
+  }
+  else
+  {cout<<"Process - "<<id<<endl;}
+
+  if(id==1)
+
+  {
+	cout<<"procces: "<<id<<endl;
+
+    for(i=0;i<10;i++) {cout<<b[i]<<"	";}
+
+	min=b[0];
+	max=b[0];
+
+	//знаходження мінімального і максимального числа в масиві
+	for(i=0;i<10;i++) {if (b[i]<=min) min=b[i], x=i; }
+	for(i=0;i<10;i++) {if (b[i]>=max) max=b[i], y=i; }
+	cout<<endl;
+	cout<<endl;
+	cout<<"Min= "<<min<<endl;
+	cout<<"Max= "<<max<<endl;
+	
+	//заміна максимального і мінімального числа в масиві
+	for(i=0;i<10;i++)
+	{	
+		if (i==x) b[i]=max;
+			if(i==y) b[i]=min;
+	}
+
+	cout<<endl;
+	cout<<endl;
+	for(i=0;i<10;i++) {cout<<b[i]<<"	";}
+	cout<<endl;
+  }
+  MPI_Finalize();
+}
