@@ -1,0 +1,130 @@
+//сортування масиву методом бульбашки(MPI)
+#include <mpi.h>
+#include <iostream>
+using namespace std;
+
+void sort(int* mas, int size)
+{
+	int i, j, tmp;
+	for (i = 0; i < size - 1; i++)
+		for (j = size - 1; j > i; j--)
+			if (mas[j] < mas[j - 1])
+			{
+				tmp = mas[j];
+				mas[j] = mas[j - 1];
+				mas[j - 1] = tmp;
+			}
+}
+
+int main(int argc, char **argv)
+{
+	int rank;
+	int tag = 0;
+	int root = 0;
+	int process,k_element;
+	int	kilkist= 16;// розмір початкового невідсорт. масива
+		
+	MPI_Status status;
+	MPI_Request request;
+
+	int *poch;	// початковий невідсорт. масив
+	int *result; // кінцевий відсортований масив
+	int *a;// допоміжний масив
+	int *b;// допоміжний масив
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &process);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	
+	poch = new int[kilkist]; // виділення памяті для початкового масиву
+	result = new int[kilkist]; // виділення памяті для кінцевого масиву
+	
+	if (rank == 0)
+	{
+		srand(MPI_Wtime());
+		for (int i = 0; i < kilkist; i++) {poch[i] = rand() % 100; cout<<poch[i]<<"  ";} // Заповнення початкового масиву і виведення на еркан
+		cout<<endl;
+		k_element = kilkist / process; // Розмір для розбиття масиву(16/4=4)
+	}  
+
+	MPI_Bcast(&k_element, 1, MPI_INT, root, MPI_COMM_WORLD); // Посилка розміру розбиття від 0-вого процесу
+
+	a = new int[k_element];	// Допоміжний масив для вмісту отриманої частини поч. масиву
+	// Роздача початкового масиву по частинам ємністю k_element(по 4 елементи)
+	MPI_Scatter(poch, k_element, MPI_INT, a, k_element, MPI_INT, root, MPI_COMM_WORLD); 
+	sort(a,k_element); // Початкове внутрішнє сортування для кожної частинки
+	b = new int[k_element * 2]; // Допоміжний масив для злиття при обміні
+
+	for (int i = 0; i < process; i++) // Цикл з парними/непарними ітераціями
+	{
+		if (i % 2 == 0)
+		{
+			if (rank%2 == 0) // Ітерація парна, в обміні беруть участь (0-1)(2-3)(4-5)...
+			{
+				if (rank < (process - 1))
+				{
+					// Якщо процес парний і якщо він не останній
+					// Виконуємо взаємний обмін з наступним -
+					//	результат в b
+					for (int k = 0; k < k_element; k++) {	b[k] = a[k];	}
+						MPI_Send(a, k_element, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
+						MPI_Recv(b+k_element, k_element, MPI_INT, rank + 1, tag, MPI_COMM_WORLD, &status);
+						sort(b, k_element*2);
+					for (int k = 0; k < k_element; k++){	a[k] = b[k];	}
+						
+				}
+			} 
+			else 
+			{
+				//
+				// Правий процес відносно парного
+				for (int k = 0; k < k_element; k++) {	b[k] = a[k];	}
+					MPI_Recv(b+k_element, k_element, MPI_INT, rank - 1, tag, MPI_COMM_WORLD, &status);
+					MPI_Send(a, k_element, MPI_INT, rank - 1, tag, MPI_COMM_WORLD);
+					sort(b, k_element*2);
+				for (int k = 0; k < k_element; k++) {	a[k] = b[k + k_element];	}
+			}
+		} 
+		else {
+			if (rank%2 == 1) // Ітерація НЕпарна, в обміні беруть участь (1-2)(3-4)(5-6)...
+			{
+				if (rank < (process - 1))
+				{
+					// Якщо процес НЕпарний і якщо він не останній
+					// Виконуємо взаємний обмін з наступним -
+					//	результат в b
+					for (int k = 0; k < k_element; k++) {	b[k] = a[k];	}
+							MPI_Send(a, k_element, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
+							MPI_Recv(b+k_element, k_element, MPI_INT, rank + 1, tag, MPI_COMM_WORLD, &status);
+							sort(b, k_element *2);
+					for (int k = 0; k < k_element; k++) {	a[k] = b[k];	}
+				}
+			}
+			else {
+				//
+				// Правий процес відносно НЕпарного
+				// 0 участі не приймає!!
+				if (rank != 0){
+					for (int k = 0; k < k_element; k++) {	b[k] = a[k];	}	
+						MPI_Recv(b+k_element, k_element, MPI_INT, rank - 1, tag, MPI_COMM_WORLD, &status);
+						MPI_Send(a, k_element, MPI_INT, rank - 1, tag, MPI_COMM_WORLD);
+						sort(b, k_element*2);
+					for (int k = 0; k < k_element; k++) {	a[k] = b[k + k_element];	}
+				}
+			}
+		}
+	}
+	
+	MPI_Gather(a, k_element, MPI_INT, result, k_element, MPI_INT, root, MPI_COMM_WORLD); // Збираємо результуючий масив
+	if (rank == 0)
+		{ cout<<"Rezalt:"<<endl;
+	for (int i = 0; i < kilkist; i++) {	cout << result[i] << "  "; }} //виведення відсортованого масиву
+
+	// Очистка виділеної пам'яті
+	delete[] poch;
+	delete[] a;
+	delete[] result;
+	delete[] b;
+	MPI_Finalize();
+	return 0;
+}
