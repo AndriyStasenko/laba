@@ -1,0 +1,114 @@
+//1) Дано ціле число N(> 1). Знайти найменше ціле число K, при якому виконується нерівність 3K > N.
+//Лістинг програми
+
+#include <stdio.h>
+#include <cstdlib>
+#include <cilk/cilk.h>
+#include <iostream>
+using namespace std;
+void func()
+{
+	int N,K=1;
+	cout << "Vvedit chuslo N: ";
+	cin >> N;
+	while(3*K<N)
+	{K++;}
+	cout << "Chuslo K: "<<K<<endl;
+}
+int main(int argc, char* argv[])
+{		
+	cilk_spawn func();
+	cilk_sync;
+	system("pause");
+	return 0;
+}
+
+//2) У двовимірному масиві записані по m оцінок n студентів. Вкажіть номера студентів, середня оцінка яких більше 4,5.
+//Лістинг програми
+
+#include <stdio.h>
+#include <iostream>
+#include <cstdlib>
+#include <cilk/cilk.h>
+#include <cilk/reducer_opadd.h>
+#include <windows.h>
+using namespace std;
+
+void vuvid(int mas[5][5]) // виведення початкового масиву на екран
+{	
+	cout<<"Номер судента в списку та його оцінки"<<endl<<endl;
+	cout<<"№	Оцинка	Оцинка	Оцинка	Оцинка"<<endl;
+	cout<<"-------------------------------------"<<endl;
+	for(int i=0;i<5;i++)
+		{
+			for(int j=0;j<5;j++)
+			{
+				cout<<mas[i][j]<<"	";
+			}
+			cout<<endl;
+		}
+	cout<<endl;
+}
+
+void vuvid1(double *mas) // виведення допоміжного масиву на екран 
+{ 
+	cout<<"Середнє значення кожного студента:"<<endl;
+	cout<<"№	Оцинка"<<endl;
+	cout<<"-----------------------------"<<endl;
+	for(int i=0;i<5;i++)
+		{	
+			cout<<i<<"	"<<mas[i]<<endl;	
+		} 
+	cout<<endl;
+}
+
+cilk::reducer_opadd<double> sum; // оголошення редуктора
+
+void sr_znach(int mas[5][5],int z) // знаходження середнього значення оцінок кожного з студентів
+{
+	double s=0;  
+	for(int i=1;i<5;i++)
+		{	
+			s+=mas[z][i]; // параметр z вказує на номер студента в списку 	
+		} 
+	sum.set_value(s/4); // присвоєння редуктору середнього значення оцінок вказуного студента 
+}
+
+void znach(double *b) // пошук і виведення на екран номерів студентів
+{
+	for(int i=0;i<5;i++)
+	{
+		if(b[i]>=4.5) cout<<"Номер студента, в якого середнє значення оцінок перевищує 4,5: "<<i<<endl;
+	}
+	cout<<endl;
+}
+
+int main()
+{
+	setlocale( LC_ALL,"ukr" );
+	int a[5][5]= {
+		{1,5,5,5,5},
+		{2,2,2,2,2},
+		{3,5,4,3,5},
+		{4,3,3,3,3},
+		{5,5,4,5,4}
+	};
+	
+	double b[5];
+	int c=0;
+	cilk_spawn vuvid(a);
+	cilk_sync;
+	cilk_for(int i = 0; i < 5; i++) //розпаралелювання циклу	
+		{
+			sum.set_value(c);
+			cilk_spawn sr_znach(a,i);
+			cilk_sync;
+			b[i] = sum.get_value();			
+		}
+	cilk_sync;
+    cilk_spawn vuvid1(b);
+	cilk_sync;
+	cilk_spawn znach(b);
+    system("pause");
+    return 0;
+}
