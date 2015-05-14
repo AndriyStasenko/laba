@@ -1,0 +1,108 @@
+Використовуючи засоби бібліотеки шаблонів Intel Threading Building Blocks, реалізувати завдання:
+1) Заданий двовимірний масив. Перевірте чи можна переставити елементи кожного рядка так, щоб вони розташувалися в строго 
+зростаючому порядку. 
+
+Лістинг програми
+-----------------------------------------------
+#include <cstdlib>
+#include <stdio.h>
+#include <iostream>
+#include "tbb/task_scheduler_init.h"
+#include "tbb/parallel_for.h"
+#include "tbb/blocked_range.h"
+#include "tbb/parallel_sort.h"
+#include "time.h"
+
+using namespace std;
+using namespace tbb;
+
+void perevirka(int** a, int i, int M) // перевірка наявності в рядкові однакових елементів
+{
+	int p,k=0;
+	parallel_for(0,M,[&](int j) 
+	{
+			for(int t=0;t<M;t++)
+				if (a[i][j] == a[i][t])
+					{
+						k=k++;
+					}
+	}	);
+ if (k>M)
+ {	cout<<"Рядок "<<i<<" неможна"<<endl;	}
+ else 
+ {	cout<<"Рядок "<<i<<" можна"<<endl;	}
+	k=0;
+}
+
+void sort(int **a, int i, int M) // сортування
+{
+	int b[100],t=0; 
+	for(int j=0;j<M;j++)
+	{
+		b[t]=a[i][j]; //запис і-того рядка в допоміжний масив b
+		t++;
+	}
+	parallel_sort(b, b + t); //паралельне сортування допоміжного масива(рядка)
+	t=0;
+	for(int j=0;j<M;j++)
+	{
+		a[i][j]=b[t]; // запис в і-тий рядок відсортований масив(відсортований рядок) 
+		b[t]=0; 
+		t++;
+	}
+}
+
+void zapov(int **a, int i, int M) // заповнення масиву
+{
+	for(int j=0;j<M;j++)
+	{
+		a[i][j]=rand()%20;
+	}
+}
+
+void vuvid(int **a, int N, int M) //виедення масиву
+{
+	for(int i=0;i<N;i++)
+	{
+		for(int j=0;j<M;j++)
+		{
+		cout<<a[i][j]<<"	";
+		}
+	cout<<endl;
+	}
+}
+
+int main()
+{	
+	int t=clock();
+	setlocale(LC_ALL, "Rus");
+	srand(time(NULL));
+	int N,M;
+	cout<<"N= ";
+	cin>>N;
+	cout<<endl<<"M= ";
+	cin>>M;
+	int **a = new int* [N];
+        for (int i = 0; i < N; i++)
+		{
+                a[i] = new int [M];
+        }
+
+	parallel_for(0,N,[&](int i) {	zapov(a,i,M);	}); //заповнення масиву випадковими числами
+	cout<<endl<<"Початковий масив"<<endl;
+	vuvid(a,N,M); // виведення масиву на екран	
+	cout<<endl;
+	
+	parallel_for(0,N,[&](int i) {	sort(a,i,M);	}); //сортування масиву
+	cout<<endl<<"Вiдсортований масив"<<endl;
+	vuvid(a,N,M); // виведення масиву на екран	
+	cout<<endl;
+	
+	parallel_for(0,N,[&](int i) {	perevirka(a,i,M);	}); //перевірка наявності однакових елементів в рядку масива
+	cout<<endl<<"Час виконання програми: "<<clock()-t<<endl;
+
+	cin.get();
+	cin.get();
+	return 0;
+}
+
