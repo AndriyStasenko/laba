@@ -112,3 +112,121 @@ int main()
     system("pause");
     return 0;
 }
+
+
+//3) Заданий двовимірний масив. Перевірте чи можна переставити елементи кожного рядка так, щоб вони розташувалися в строго 
+зростаючому порядку. 
+//Лістинг програми
+#include <cstdlib>
+#include <cilk/cilk.h>
+#include <cilk/reducer_opadd.h>
+#include <windows.h>
+#include<iostream>
+#include<time.h>
+#include <stdio.h>
+
+using namespace std;
+int N,M;
+cilk::reducer_opadd<int> s; // оголошення редуктора
+
+void gen(int** x,int N,int M, int i)
+{
+		for(int j=0;j<M;j++)
+		{
+			x[i][j]=rand()%25;
+		}	
+}
+
+void masvuvid(int** x,int N,int M)
+{
+	for(int i=0;i<N;i++)
+	{
+		for(int j=0;j<M;j++)
+		{
+			cout<<x[i][j]<<"	";
+		}
+		cout<<endl;
+	}
+}
+
+void sort(int** a,int N,int M,int i)
+{
+	for(int j=0;j<M-1;j++)
+	{
+		 for(int r=j+1;r<M;r++)
+		{
+			 if(a[i][j]>a[i][r])
+				 {
+					int x=a[i][j];
+					a[i][j]=a[i][r];
+					a[i][r]=x;
+			     }
+		}
+	}
+}
+
+void maspe(int** a,int N,int M, int i)
+{
+	int p,k=0;
+	for(int j=0;j<M;j++)
+	{
+		s.set_value(a[i][j]);
+			for(int t=0;t<M;t++)
+				if (s.get_value() == a[i][t])
+					{
+						k=k++;
+					}
+	}
+ if (k>M)
+ {	cout<<"Рядок "<<i<<" неможна"<<endl;	}
+ else 
+ {	cout<<"Рядок "<<i<<" можна"<<endl;	}
+	k=0;
+}
+
+void main()
+{
+ setlocale(LC_ALL,"rus");
+ cout<<"N= ";
+ cin>>N;
+ cout<<endl<<"M= ";
+ cin>>M;
+	int **a = new int* [N];
+        for (int i = 0; i < N; i++)
+        {
+                a[i] = new int [M];
+        }
+	int k,t,n,m,p;
+
+ cout<<"Початковий масив"<<endl;	
+ srand(time(NULL));
+ cilk_for(int i = 0; i < N; i++)
+  {
+	cilk_spawn gen(a,N,M,i);// генерація елементів масиву
+	cilk_sync;
+  }	
+	cilk_spawn masvuvid(a,N,M);	//виведення масиву
+	cilk_sync;
+	cout<<endl<<"Cортований масив"<<endl;
+ cilk_for(int i = 0; i < N; i++)
+  {
+	cilk_spawn sort(a,N,M,i);		// сортування масиву
+	cilk_sync;
+  }
+
+  cilk_spawn masvuvid(a,N,M);	//виведення масиву
+  cilk_sync;
+  
+ cilk_for(int i = 0; i < N; i++)
+  {
+	  cilk_spawn maspe(a,N,M,i);		//перевірка
+	  cilk_sync;
+  }
+
+ for(int i = 0; i < N; i++)
+        delete[] a[i];
+        delete[] a;
+ cin.get();
+ cin.get();
+}
+
